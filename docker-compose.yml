@@ -1,0 +1,13 @@
+services:
+  frontend:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_API_URL: http://host.docker.internal:8000
+
+    container_name: crm-frontend
+
+    ports:
+      - "3000:3000"
+
+    restart: unless-stopped

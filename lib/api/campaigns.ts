@@ -10,3 +10,13 @@ export async function getCampaigns() {
 
   return response.data
 }
+
+export async function dispatchCampaign(
+  campaignId: number
+) {
+  const response = await api.post(
+    `/campaigns/${campaignId}/dispatch/`
+  )
+
+  return response.data
+}
