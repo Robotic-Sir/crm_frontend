@@ -15,6 +15,7 @@ import {
 } from "lucide-react"
 
 import { useAuthStore } from "@/lib/store/auth"
+import NotificationBell from "@/components/layout/NotificationBell"
 
 const links = [
   {
@@ -120,13 +121,13 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="border-t p-4">
+      <div className="space-y-1 border-t p-4">
+        <NotificationBell />
         <button
           onClick={logout}
           className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
         >
           <LogOut size={18} />
-
           Logout
         </button>
       </div>
