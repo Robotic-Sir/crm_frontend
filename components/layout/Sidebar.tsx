@@ -11,6 +11,7 @@ import {
   Upload,
   Shield,
   LogOut,
+  Settings,
 } from "lucide-react"
 
 import { useAuthStore } from "@/lib/store/auth"
@@ -99,8 +100,22 @@ export default function Sidebar() {
             }`}
           >
             <Shield size={18} />
-
             Users
+          </Link>
+        )}
+
+        {(user?.role === "superadmin" ||
+          user?.role === "admin") && (
+          <Link
+            href="/settings/custom-fields"
+            className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition ${
+              pathname === "/settings/custom-fields"
+                ? "bg-slate-900 text-white"
+                : "text-slate-700 hover:bg-slate-100"
+            }`}
+          >
+            <Settings size={18} />
+            Custom Fields
           </Link>
         )}
       </nav>
