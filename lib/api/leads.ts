@@ -39,7 +39,7 @@ export async function updateLead(
 // Notes
 export async function getNotes(leadId: number): Promise<Note[]> {
   const response = await apiClient.get(`/leads/${leadId}/notes/`)
-  return response.data
+  return response.data.results ?? response.data
 }
 
 export async function addNote(
@@ -60,7 +60,7 @@ export async function deleteNote(
 // Reminders
 export async function getReminders(leadId: number): Promise<Reminder[]> {
   const response = await apiClient.get(`/leads/${leadId}/reminders/`)
-  return response.data
+  return response.data.results ?? response.data
 }
 
 export async function addReminder(
@@ -86,12 +86,12 @@ export async function updateReminder(
 // Custom Fields
 export async function getCustomFields(): Promise<CustomField[]> {
   const response = await apiClient.get("/leads/custom-fields/")
-  return response.data
+  return response.data.results ?? response.data
 }
 
 export async function getActiveCustomFields(): Promise<CustomField[]> {
   const response = await apiClient.get("/leads/custom-fields/active/")
-  return response.data
+  return response.data.results ?? response.data
 }
 
 export async function createCustomField(
@@ -150,5 +150,5 @@ export async function getMyReminders(
 // Counsellors list (for assignment dropdowns)
 export async function getCounsellors() {
   const response = await apiClient.get("/users/counsellors/")
-  return response.data
+  return response.data.results ?? response.data
 }
