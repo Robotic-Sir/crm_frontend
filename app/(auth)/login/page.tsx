@@ -155,71 +155,126 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <Card className="w-full max-w-md rounded-2xl shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            CRM Login
-          </CardTitle>
-        </CardHeader>
+    <div className="flex min-h-screen">
+      <div className="hidden md:flex md:w-1/2 flex-col items-center justify-center bg-gradient-to-br from-indigo-900 via-indigo-800 to-violet-900 p-12">
+        <div className="max-w-sm text-center">
+          <div className="mb-8 text-7xl">🤖</div>
+          <h2 className="mb-3 text-4xl font-bold text-white">
+            RoboticSir CRM
+          </h2>
+          <p className="mb-10 text-indigo-200 text-lg">
+            The all-in-one platform for your sales team
+          </p>
+          <ul className="space-y-4 text-left">
+            <li className="flex items-center gap-3 text-indigo-100">
+              <span className="text-indigo-300">✦</span>
+              Manage leads and contacts
+            </li>
+            <li className="flex items-center gap-3 text-indigo-100">
+              <span className="text-indigo-300">✦</span>
+              WhatsApp automation
+            </li>
+            <li className="flex items-center gap-3 text-indigo-100">
+              <span className="text-indigo-300">✦</span>
+              Campaign tracking
+            </li>
+            <li className="flex items-center gap-3 text-indigo-100">
+              <span className="text-indigo-300">✦</span>
+              Team collaboration
+            </li>
+          </ul>
+        </div>
+      </div>
 
-        <CardContent>
-          <form
-            onSubmit={handleSubmit(
-              onSubmit
-            )}
-            className="space-y-4"
-          >
-            <div>
-              <Input
-                type="email"
-                placeholder="Email"
-                {...register("email")}
-              />
+      <div className="flex w-full md:w-1/2 items-center justify-center bg-white px-6 py-12">
+        <div className="w-full max-w-sm">
+          <div className="mb-8 md:hidden text-center">
+            <span className="text-5xl">🤖</span>
+          </div>
 
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-500">
-                  {
-                    errors.email
-                      .message
-                  }
-                </p>
-              )}
-            </div>
+          <Card className="w-full border-0 shadow-none md:border md:shadow-sm rounded-2xl">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">
+                Welcome back
+              </CardTitle>
+              <p className="text-sm text-slate-500">
+                Sign in to your account
+              </p>
+            </CardHeader>
 
-            <div>
-              <Input
-                type="password"
-                placeholder="Password"
-                {...register(
-                  "password"
+            <CardContent>
+              <form
+                onSubmit={handleSubmit(
+                  onSubmit
                 )}
-              />
+                className="space-y-5"
+              >
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-700">
+                    Email
+                  </label>
+                  <Input
+                    type="email"
+                    placeholder="you@example.com"
+                    {...register("email")}
+                  />
 
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-500">
-                  {
-                    errors.password
-                      .message
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {
+                        errors.email
+                          .message
+                      }
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-slate-700">
+                    Password
+                  </label>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    {...register(
+                      "password"
+                    )}
+                  />
+
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {
+                        errors.password
+                          .message
+                      }
+                    </p>
+                  )}
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                  disabled={
+                    mutation.isPending
                   }
-                </p>
-              )}
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={
-                mutation.isPending
-              }
-            >
-              {mutation.isPending
-                ? "Logging in..."
-                : "Login"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                >
+                  {mutation.isPending
+                    ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                        </svg>
+                        Signing in...
+                      </span>
+                    )
+                    : "Sign in"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

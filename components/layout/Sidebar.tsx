@@ -12,6 +12,7 @@ import {
   Shield,
   LogOut,
   Settings,
+  User,
 } from "lucide-react"
 
 import { useAuthStore } from "@/lib/store/auth"
@@ -55,15 +56,19 @@ export default function Sidebar() {
   )
 
   return (
-    <aside className="flex w-64 flex-col border-r bg-white">
-      <div className="border-b p-6">
-        <h1 className="text-xl font-bold">
-          RoboticSir CRM
-        </h1>
-
-        <p className="mt-1 text-sm text-slate-500">
-          {user?.email}
-        </p>
+    <aside className="flex w-64 flex-col bg-[#1e1b4b]">
+      <div className="border-b border-white/10 p-6">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🤖</span>
+          <div>
+            <h1 className="text-lg font-bold text-white leading-tight">
+              RoboticSir
+            </h1>
+            <p className="text-xs text-indigo-300 leading-tight">
+              CRM Platform
+            </p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 space-y-1 p-4">
@@ -77,10 +82,10 @@ export default function Sidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition ${
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
                 active
-                  ? "bg-slate-900 text-white"
-                  : "text-slate-700 hover:bg-slate-100"
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 border-l-2 border-indigo-300"
+                  : "text-indigo-200 hover:bg-indigo-800/50 hover:text-white"
               }`}
             >
               <Icon size={18} />
@@ -94,10 +99,10 @@ export default function Sidebar() {
           "superadmin" && (
           <Link
             href="/users"
-            className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition ${
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
               pathname === "/users"
-                ? "bg-slate-900 text-white"
-                : "text-slate-700 hover:bg-slate-100"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 border-l-2 border-indigo-300"
+                : "text-indigo-200 hover:bg-indigo-800/50 hover:text-white"
             }`}
           >
             <Shield size={18} />
@@ -109,10 +114,10 @@ export default function Sidebar() {
           user?.role === "admin") && (
           <Link
             href="/settings/custom-fields"
-            className={`flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition ${
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
               pathname === "/settings/custom-fields"
-                ? "bg-slate-900 text-white"
-                : "text-slate-700 hover:bg-slate-100"
+                ? "bg-indigo-600 text-white shadow-lg shadow-indigo-900/40 border-l-2 border-indigo-300"
+                : "text-indigo-200 hover:bg-indigo-800/50 hover:text-white"
             }`}
           >
             <Settings size={18} />
@@ -121,11 +126,28 @@ export default function Sidebar() {
         )}
       </nav>
 
-      <div className="space-y-1 border-t p-4">
+      <div className="border-t border-white/10 p-4 space-y-1">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
+            <User size={14} />
+          </div>
+          <div className="min-w-0">
+            {(user?.first_name || user?.last_name) && (
+              <p className="truncate text-sm font-medium text-white">
+                {[user.first_name, user.last_name].filter(Boolean).join(" ")}
+              </p>
+            )}
+            <p className="truncate text-xs text-indigo-300">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+
         <NotificationBell />
+
         <button
           onClick={logout}
-          className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-red-600 transition hover:bg-red-50"
+          className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-red-400 transition hover:bg-red-500/10 hover:text-red-300"
         >
           <LogOut size={18} />
           Logout
