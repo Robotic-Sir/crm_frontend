@@ -38,9 +38,11 @@ const FIELD_TYPES = [
   { label: "Text", value: "text" },
   { label: "Number", value: "number" },
   { label: "Date", value: "date" },
-  { label: "Select / Dropdown", value: "select" },
+  { label: "Dropdown", value: "dropdown" },
+  { label: "Radio", value: "radio" },
   { label: "Textarea", value: "textarea" },
   { label: "Checkbox", value: "checkbox" },
+  { label: "Email", value: "email" },
 ]
 
 export default function CustomFieldsPage() {
@@ -131,7 +133,7 @@ export default function CustomFieldsPage() {
       required: form.required,
       default_value: form.default_value,
       options:
-        form.field_type === "select"
+        ["dropdown", "radio"].includes(form.field_type)
           ? form.options
               .split(",")
               .map((o) => o.trim())
@@ -210,7 +212,7 @@ export default function CustomFieldsPage() {
                       Placeholder: {field.placeholder}
                     </p>
                   )}
-                  {field.field_type === "select" && field.options?.length > 0 && (
+                  {["dropdown", "radio"].includes(field.field_type) && field.options?.length > 0 && (
                     <p className="mt-0.5 text-xs text-slate-400">
                       Options: {field.options.join(", ")}
                     </p>
@@ -279,7 +281,7 @@ export default function CustomFieldsPage() {
                 onChange={(e) => setForm({ ...form, placeholder: e.target.value })}
               />
             </div>
-            {form.field_type === "select" && (
+            {["dropdown", "radio"].includes(form.field_type) && (
               <div>
                 <Label>Options (comma separated)</Label>
                 <Input

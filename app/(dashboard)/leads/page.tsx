@@ -22,6 +22,7 @@ import LeadsTable from "@/components/leads/LeadsTable"
 export default function LeadsPage() {
   const [searchInput, setSearchInput] =
     useState("")
+  const [page, setPage] = useState(1)
 
   const [debouncedSearch] =
     useDebounce(
@@ -36,10 +37,17 @@ export default function LeadsPage() {
   } = useLeads({
     search:
       debouncedSearch,
+    page,
   })
 
   const leads =
     data?.results || []
+  const totalPages = Math.max(1, Math.ceil((data?.count || 0) / 50))
+  const visiblePages = Array.from(
+    new Set([1, totalPages, page - 2, page - 1, page, page + 1, page + 2])
+  )
+    .filter((pageNumber) => pageNumber >= 1 && pageNumber <= totalPages)
+    .sort((a, b) => a - b)
 
   if (isError) {
     return (
@@ -90,9 +98,10 @@ export default function LeadsPage() {
           placeholder="Search by name, phone, course..."
           value={searchInput}
           onChange={(e) =>
-            setSearchInput(
-              e.target.value
-            )
+            {
+              setSearchInput(e.target.value)
+              setPage(1)
+            }
           }
           className="pl-10"
         />
@@ -108,6 +117,47 @@ export default function LeadsPage() {
         <LeadsTable
           leads={leads}
         />
+      )}
+
+      {!isLoading && data && data.count > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-slate-500">
+            Showing {(page - 1) * 50 + 1}–{Math.min(page * 50, data.count)} of {data.count} leads
+          </p>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data.previous}
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+            >
+              Previous
+            </Button>
+            {visiblePages.map((pageNumber, index) => (
+              <div key={pageNumber} className="flex items-center gap-1">
+                {index > 0 && pageNumber - visiblePages[index - 1] > 1 && (
+                  <span className="px-1 text-slate-400">…</span>
+                )}
+                <Button
+                  variant={pageNumber === page ? "default" : "outline"}
+                  size="sm"
+                  className="min-w-9"
+                  onClick={() => setPage(pageNumber)}
+                >
+                  {pageNumber}
+                </Button>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!data.next}
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -45,6 +45,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
             <TableHead>City</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Assigned To</TableHead>
+            <TableHead>Contacted On</TableHead>
             <TableHead>Created</TableHead>
           </TableRow>
         </TableHeader>
@@ -73,6 +74,11 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell>{lead.assigned_to_name || "-"}</TableCell>
+                <TableCell>
+                  {lead.last_contacted_at
+                    ? new Date(lead.last_contacted_at).toLocaleDateString()
+                    : "Not contacted"}
+                </TableCell>
                 <TableCell>
                   {new Date(lead.created_at).toLocaleDateString()}
                 </TableCell>

@@ -10,6 +10,7 @@ export interface Lead {
   notes: string
   assigned_to: number | null
   assigned_to_name: string | null
+  last_contacted_at: string | null
   created_by: number | null
   created_at: string
   updated_at: string
@@ -60,7 +61,15 @@ export interface Activity {
 export interface CustomField {
   id: number
   label: string
-  field_type: "text" | "number" | "date" | "select" | "textarea" | "checkbox"
+  field_type:
+    | "text"
+    | "textarea"
+    | "dropdown"
+    | "checkbox"
+    | "radio"
+    | "number"
+    | "date"
+    | "email"
   placeholder: string
   required: boolean
   options: string[]

@@ -4,11 +4,11 @@ import { WATemplate } from "../types/template"
 
 export async function getTemplates() {
   const response =
-    await api.get<WATemplate[]>(
+    await api.get<WATemplate[] | { results: WATemplate[] }>(
       "/templates/"
     )
 
-  return response.data
+  return Array.isArray(response.data) ? response.data : response.data.results
 }
 
 export async function createTemplate(
