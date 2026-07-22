@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
@@ -9,6 +10,7 @@ import {
   Inbox,
   MapPin,
   MessageCircle,
+  PencilLine,
   Phone,
   UserRound,
 } from "lucide-react"
@@ -19,6 +21,15 @@ import { CONTACT_STATUSES, LEAD_STATUSES } from "@/lib/constants/leads"
 import { getCounsellors, updateLead } from "@/lib/api/leads"
 import { useAuthStore } from "@/lib/store/auth"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import {
   Select,
   SelectContent,
@@ -34,6 +45,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
 
 interface LeadsTableProps {
   leads: Lead[]
@@ -72,6 +84,12 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
   }
 
   const update = (id: number, data: Partial<Lead>) => updateMutation.mutate({ id, data })
+  const updateRemark = (id: number, notes: string, onSaved: () => void) => {
+    updateMutation.mutate(
+      { id, data: { notes } },
+      { onSuccess: onSaved }
+    )
+  }
 
   return (
     <>
@@ -82,6 +100,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
               <TableRow>
                 <TableHead className="min-w-56">Lead</TableHead>
                 <TableHead className="min-w-44">Course & location</TableHead>
+                <TableHead className="min-w-64">Remark</TableHead>
                 <TableHead className="min-w-44">Contacted</TableHead>
                 <TableHead className="min-w-44">Lead stage</TableHead>
                 <TableHead className="min-w-44">Owner</TableHead>
@@ -97,6 +116,14 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                   </TableCell>
                   <TableCell>
                     <CourseLocation lead={lead} />
+                  </TableCell>
+                  <TableCell>
+                    <RemarkEditor
+                      lead={lead}
+                      canEdit={isAdmin}
+                      isSaving={updateMutation.isPending}
+                      onSave={updateRemark}
+                    />
                   </TableCell>
                   <TableCell>
                     <ContactSelect lead={lead} onUpdate={update} />
@@ -137,6 +164,15 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 <span className="flex items-center gap-1"><UserRound className="h-3.5 w-3.5" /> Owner</span>
                 <p className="truncate text-sm font-medium text-slate-700">{lead.assigned_to_name || "Unassigned"}</p>
               </div>
+            </div>
+            <div className="border-b border-slate-100 py-3">
+              <p className="mb-1 text-xs font-medium text-slate-500">Remark</p>
+              <RemarkEditor
+                lead={lead}
+                canEdit={isAdmin}
+                isSaving={updateMutation.isPending}
+                onSave={updateRemark}
+              />
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <div>
@@ -180,6 +216,79 @@ function CourseLocation({ lead }: { lead: Lead }) {
       <p className="flex items-center gap-1.5 font-medium text-slate-700"><GraduationCap className="h-3.5 w-3.5 text-slate-400" />{lead.course || "No course"}</p>
       <p className="flex items-center gap-1.5 text-slate-500"><MapPin className="h-3.5 w-3.5" />{lead.city || "No location"}</p>
     </div>
+  )
+}
+
+function RemarkEditor({
+  lead,
+  canEdit,
+  isSaving,
+  onSave,
+}: {
+  lead: Lead
+  canEdit: boolean
+  isSaving: boolean
+  onSave: (id: number, notes: string, onSaved: () => void) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [remark, setRemark] = useState(lead.notes || "")
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen)
+    if (nextOpen) setRemark(lead.notes || "")
+  }
+
+  const content = lead.notes ? (
+    <p className="line-clamp-3 whitespace-pre-wrap text-sm leading-5 text-slate-600">
+      {lead.notes}
+    </p>
+  ) : (
+    <p className="text-sm italic text-slate-400">No remark added</p>
+  )
+
+  if (!canEdit) return content
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogTrigger asChild>
+        <button
+          type="button"
+          className="group/remark flex w-full items-start justify-between gap-2 rounded-xl border border-transparent p-2 text-left transition hover:border-indigo-100 hover:bg-indigo-50/60"
+          aria-label={`${lead.notes ? "Edit" : "Add"} remark for ${lead.name}`}
+        >
+          <div className="min-w-0 flex-1">{content}</div>
+          <PencilLine className="mt-0.5 h-4 w-4 shrink-0 text-slate-400 group-hover/remark:text-indigo-600" />
+        </button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{lead.notes ? "Edit remark" : "Add remark"}</DialogTitle>
+          <DialogDescription>
+            Update the lead-level remark for {lead.name}. It will be visible directly in the leads list.
+          </DialogDescription>
+        </DialogHeader>
+        <Textarea
+          value={remark}
+          onChange={(event) => setRemark(event.target.value)}
+          placeholder="Enter follow-up context or a lead remark..."
+          className="min-h-32 resize-y"
+          maxLength={5000}
+          autoFocus
+        />
+        <div className="text-right text-xs text-slate-400">{remark.length}/5000</div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button
+            onClick={() => onSave(lead.id, remark.trim(), () => setOpen(false))}
+            disabled={isSaving}
+          >
+            {isSaving ? "Saving..." : "Save remark"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

@@ -34,6 +34,12 @@ export function UploadDropzone() {
           <p className="mt-1 text-sm text-slate-500">
             CSV, XLSX, XLS supported
           </p>
+          <p className="mt-2 max-w-lg text-xs leading-5 text-slate-400">
+            Include a <span className="font-medium text-slate-600">Remark</span>,{" "}
+            <span className="font-medium text-slate-600">Remarks</span>, or{" "}
+            <span className="font-medium text-slate-600">Notes</span> column to import lead remarks.
+            Re-importing the same phone number updates its remark.
+          </p>
         </div>
 
         <button

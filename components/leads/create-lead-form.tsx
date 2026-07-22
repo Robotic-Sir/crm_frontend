@@ -170,10 +170,10 @@ export function CreateLeadForm() {
           </Field>
         )}
         <div className="md:col-span-2">
-          <Field label="Notes">
+          <Field label="Remark">
             <Textarea
               {...register("notes")}
-              placeholder="Context, requirements, preferred callback time..."
+              placeholder="Add a remark visible from the leads page..."
               className="min-h-24 bg-white"
             />
           </Field>

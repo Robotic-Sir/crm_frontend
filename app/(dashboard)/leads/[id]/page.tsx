@@ -277,7 +277,7 @@ export default function LeadDetailPage() {
                 </Select>
               </div>
               <div className="sm:col-span-2">
-                <Label>Notes</Label>
+                <Label>Remark</Label>
                 <Textarea
                   value={editForm.notes}
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
@@ -312,7 +312,7 @@ export default function LeadDetailPage() {
               />
               {lead.notes && (
                 <div className="sm:col-span-2">
-                  <InfoRow label="Notes" value={lead.notes} />
+                  <InfoRow label="Remark" value={lead.notes} />
                 </div>
               )}
             </div>
