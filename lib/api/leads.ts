@@ -11,17 +11,28 @@ import {
   CustomField,
   CustomFieldValue,
   DashboardData,
+  LeadFilters,
+  LeadFilterOptions,
+  ReminderSummary,
 } from "@/lib/types/lead"
+import { User } from "@/lib/types/user"
 
-export async function getLeads(search = "", page = 1): Promise<LeadsResponse> {
+export async function getLeads(
+  search = "",
+  page = 1,
+  filters: LeadFilters = {}
+): Promise<LeadsResponse> {
   const response = await apiClient.get("/leads/", {
-    params: { search, page },
+    params: { search, page, ...filters },
   })
   return response.data
 }
 
 export async function createLead(
-  data: CreateLeadInput & { custom_fields?: Record<string, string> }
+  data: CreateLeadInput & {
+    assigned_to?: number | null
+    custom_fields?: Record<string, string>
+  }
 ): Promise<Lead> {
   const response = await apiClient.post("/leads/", data)
   return response.data
@@ -37,6 +48,16 @@ export async function updateLead(
   data: Partial<Lead>
 ): Promise<Lead> {
   const response = await apiClient.patch(`/leads/${id}/`, data)
+  return response.data
+}
+
+export async function getLeadFilterOptions(): Promise<LeadFilterOptions> {
+  const response = await apiClient.get("/leads/filter-options/")
+  return response.data
+}
+
+export async function getReminderSummary(): Promise<ReminderSummary> {
+  const response = await apiClient.get("/leads/reminder-summary/")
   return response.data
 }
 
@@ -152,7 +173,7 @@ export async function getMyReminders(
 }
 
 // Counsellors list (for assignment dropdowns)
-export async function getCounsellors() {
+export async function getCounsellors(): Promise<User[]> {
   const response = await apiClient.get("/users/counsellors/")
   return response.data.results ?? response.data
 }

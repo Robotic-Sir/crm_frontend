@@ -21,7 +21,6 @@ import {
 } from "recharts"
 
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useAuthStore } from "@/lib/store/auth"
 import { useDashboard } from "@/hooks/use-dashboard"
@@ -81,7 +80,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Dashboard</h1>
         <p className="mt-1 text-sm text-slate-500">
           Welcome back,{" "}
           <span className="font-medium text-slate-900">
@@ -149,7 +148,7 @@ export default function DashboardPage() {
           {statusData.length === 0 ? (
             <p className="py-12 text-center text-sm text-slate-400">No data</p>
           ) : (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
               <ResponsiveContainer width={180} height={180}>
                 <PieChart>
                   <Pie

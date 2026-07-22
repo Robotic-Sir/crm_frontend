@@ -18,6 +18,12 @@ export const LEAD_STATUSES = [
   { label: "Lost", value: "lost" },
 ]
 
+export const CONTACT_STATUSES = [
+  { label: "Not Contacted", value: "not_contacted" },
+  { label: "Attempted", value: "attempted" },
+  { label: "Contacted", value: "contacted" },
+]
+
 export const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   new: { bg: "bg-blue-100", text: "text-blue-700" },
   attempted: { bg: "bg-yellow-100", text: "text-yellow-700" },

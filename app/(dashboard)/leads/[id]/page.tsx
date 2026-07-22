@@ -149,7 +149,7 @@ export default function LeadDetailPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon-sm" onClick={() => router.push("/leads")}>
             <ArrowLeft size={18} />
@@ -180,14 +180,14 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Tab Bar */}
-      <div className="flex gap-1 rounded-lg border bg-white p-1">
+      <div className="flex gap-1 overflow-x-auto rounded-lg border bg-white p-1">
         {tabs.map((tab) => {
           const Icon = tab.icon
           return (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium transition ${
+              className={`flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition sm:px-4 ${
                 activeTab === tab.key
                   ? "bg-slate-900 text-white"
                   : "text-slate-600 hover:bg-slate-100"

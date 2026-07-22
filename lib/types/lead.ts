@@ -8,12 +8,26 @@ export interface Lead {
   status: string
   source: string
   notes: string
+  contact_status: "not_contacted" | "attempted" | "contacted"
+  contacted_at: string | null
   assigned_to: number | null
   assigned_to_name: string | null
   last_contacted_at: string | null
   created_by: number | null
   created_at: string
   updated_at: string
+}
+
+export interface LeadFilters {
+  status?: string
+  city?: string
+  course?: string
+  contact_status?: string
+}
+
+export interface LeadFilterOptions {
+  cities: string[]
+  courses: string[]
 }
 
 export interface LeadsResponse {
@@ -45,6 +59,14 @@ export interface Reminder {
   created_by_name: string | null
   completed_at: string | null
   created_at: string
+}
+
+export interface ReminderSummary {
+  pending: number
+  overdue: number
+  today: number
+  upcoming: number
+  next_reminders: Reminder[]
 }
 
 export interface Activity {

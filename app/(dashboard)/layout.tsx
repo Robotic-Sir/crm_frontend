@@ -5,6 +5,7 @@ import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 
 import Sidebar from "@/components/layout/Sidebar"
+import MobileNav from "@/components/layout/MobileNav"
 
 import { useAuthStore } from "@/lib/store/auth"
 
@@ -62,11 +63,12 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <Sidebar />
+      <MobileNav />
 
-      <main className="flex-1 overflow-auto border-t border-slate-200 p-6">
-        {children}
+      <main className="min-w-0 flex-1 overflow-auto px-4 pb-24 pt-20 sm:px-6 lg:border-t lg:border-slate-200 lg:p-8">
+        <div className="mx-auto w-full max-w-[1600px]">{children}</div>
       </main>
     </div>
   )

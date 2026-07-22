@@ -56,7 +56,7 @@ export default function Sidebar() {
   )
 
   return (
-    <aside className="flex w-64 flex-col bg-[#1e1b4b]">
+    <aside className="hidden w-64 shrink-0 flex-col bg-[#1e1b4b] lg:flex">
       <div className="border-b border-white/10 p-6">
         <div className="flex items-center gap-3">
           <span className="text-2xl">🤖</span>

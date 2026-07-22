@@ -16,7 +16,7 @@ export function ImportsTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border bg-white">
+    <div className="overflow-x-auto rounded-2xl border bg-white">
       <table className="w-full">
         <thead className="border-b bg-slate-50">
           <tr>

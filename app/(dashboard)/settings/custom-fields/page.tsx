@@ -157,14 +157,14 @@ export default function CustomFieldsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Custom Fields</h1>
           <p className="mt-1 text-sm text-slate-500">
             Add dynamic fields that appear on every lead form
           </p>
         </div>
-        <Button onClick={openCreate}>
+        <Button onClick={openCreate} className="w-full sm:w-auto">
           <Plus size={16} className="mr-2" />
           Add Field
         </Button>
@@ -185,7 +185,7 @@ export default function CustomFieldsPage() {
           {fields.map((field) => (
             <Card
               key={field.id}
-              className={`flex items-center justify-between rounded-2xl p-4 ${
+              className={`flex flex-col items-stretch gap-4 rounded-2xl p-4 sm:flex-row sm:items-center sm:justify-between ${
                 !field.is_active ? "opacity-50" : ""
               }`}
             >
@@ -219,7 +219,7 @@ export default function CustomFieldsPage() {
                   )}
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" onClick={() => toggleActive(field)}>
                   {field.is_active ? "Disable" : "Enable"}
                 </Button>

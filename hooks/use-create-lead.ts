@@ -7,6 +7,7 @@ import { useMutation } from "@tanstack/react-query"
 import { useQueryClient } from "@tanstack/react-query"
 
 import toast from "react-hot-toast"
+import { AxiosError } from "axios"
 
 import { createLead } from "@/lib/api/leads"
 
@@ -43,11 +44,16 @@ export function useCreateLead() {
       router.push("/leads")
     },
 
-    onError: (error) => {
+    onError: (error: AxiosError<Record<string, string[] | string>>) => {
       console.error(error)
-
+      const responseData = error.response?.data
+      const firstError = responseData
+        ? Object.values(responseData).flat()[0]
+        : null
       toast.error(
-        "Failed to create lead"
+        typeof firstError === "string"
+          ? firstError
+          : "Failed to create lead. Please check the form and try again."
       )
     },
   })

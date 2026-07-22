@@ -1,11 +1,11 @@
 "use client"
 
-import { Bell, BellOff, BellRing, Loader2 } from "lucide-react"
+import { BellOff, BellRing, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { usePushNotifications } from "@/hooks/use-push-notifications"
 import toast from "react-hot-toast"
 
-export default function NotificationBell() {
+export default function NotificationBell({ compact = false }: { compact?: boolean }) {
   const { supported, subscribed, loading, permission, subscribe, unsubscribe } =
     usePushNotifications()
 
@@ -32,7 +32,8 @@ export default function NotificationBell() {
       variant="ghost"
       onClick={handleToggle}
       disabled={loading}
-      className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-100"
+      size={compact ? "icon-sm" : "default"}
+      className={compact ? "rounded-full" : "flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm text-slate-700 transition hover:bg-slate-100"}
     >
       {loading ? (
         <Loader2 size={18} className="animate-spin" />
@@ -41,7 +42,7 @@ export default function NotificationBell() {
       ) : (
         <BellOff size={18} className="text-slate-400" />
       )}
-      {subscribed ? "Notifications On" : "Enable Notifications"}
+      {!compact && (subscribed ? "Notifications On" : "Enable Notifications")}
     </Button>
   )
 }
