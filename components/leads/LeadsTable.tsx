@@ -103,6 +103,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 <TableHead className="min-w-64">Remark</TableHead>
                 <TableHead className="min-w-44">Contacted</TableHead>
                 <TableHead className="min-w-44">Lead stage</TableHead>
+                <TableHead className="min-w-40">WhatsApp consent</TableHead>
                 <TableHead className="min-w-44">Owner</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Quick actions</TableHead>
@@ -130,6 +131,9 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                   </TableCell>
                   <TableCell>
                     <StatusSelect lead={lead} onUpdate={update} />
+                  </TableCell>
+                  <TableCell>
+                    <ConsentSelect lead={lead} canEdit={isAdmin} onUpdate={update} />
                   </TableCell>
                   <TableCell>
                     {isAdmin ? (
@@ -182,6 +186,10 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
               <div>
                 <p className="mb-1 text-xs font-medium text-slate-500">Lead stage</p>
                 <StatusSelect lead={lead} onUpdate={update} />
+              </div>
+              <div className="sm:col-span-2">
+                <p className="mb-1 text-xs font-medium text-slate-500">WhatsApp consent</p>
+                <ConsentSelect lead={lead} canEdit={isAdmin} onUpdate={update} />
               </div>
               {isAdmin && (
                 <div className="sm:col-span-2">
@@ -305,6 +313,24 @@ function ContactSelect({ lead, onUpdate }: { lead: Lead; onUpdate: (id: number, 
         {lead.last_contacted_at ? formatDate(lead.last_contacted_at) : "No contact logged"}
       </p>
     </div>
+  )
+}
+
+function ConsentSelect({ lead, canEdit, onUpdate }: { lead: Lead; canEdit: boolean; onUpdate: (id: number, data: Partial<Lead>) => void }) {
+  if (!canEdit) {
+    return <span className={`text-sm font-medium ${lead.whatsapp_opt_in ? "text-emerald-700" : "text-slate-400"}`}>{lead.whatsapp_opt_in ? "Opted in" : "No consent"}</span>
+  }
+  return (
+    <Select
+      value={lead.whatsapp_opt_in ? "yes" : "no"}
+      onValueChange={(value) => onUpdate(lead.id, {
+        whatsapp_opt_in: value === "yes",
+        whatsapp_opt_in_source: value === "yes" ? "CRM admin confirmation" : "",
+      })}
+    >
+      <SelectTrigger className="h-9 w-full rounded-xl bg-white"><SelectValue /></SelectTrigger>
+      <SelectContent><SelectItem value="yes">Opted in</SelectItem><SelectItem value="no">No consent</SelectItem></SelectContent>
+    </Select>
   )
 }
 

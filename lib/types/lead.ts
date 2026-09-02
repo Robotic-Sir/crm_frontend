@@ -8,6 +8,9 @@ export interface Lead {
   status: string
   source: string
   notes: string
+  whatsapp_opt_in: boolean
+  whatsapp_opted_in_at: string | null
+  whatsapp_opt_in_source: string
   contact_status: "not_contacted" | "attempted" | "contacted"
   contacted_at: string | null
   assigned_to: number | null
