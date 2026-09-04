@@ -18,7 +18,9 @@ export interface Campaign {
   audience_filters: Record<string, string>
   lead_count: number
   delivery_stats: DeliveryStats
-  status: "draft" | "running" | "done" | "failed"
+  status: "draft" | "preparing" | "running" | "done" | "failed"
+  media_type: "" | "IMAGE" | "VIDEO" | "DOCUMENT"
+  media_original_name: string
   scheduled_at: string | null
   created_at: string
 }
@@ -36,4 +38,5 @@ export interface CampaignInput {
   template: number
   audience_filters: Record<string, string>
   scheduled_at?: string | null
+  media_file?: File | null
 }

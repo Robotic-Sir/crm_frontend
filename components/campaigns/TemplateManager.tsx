@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { CheckCircle2, CloudDownload, FilePlus2, PencilLine } from "lucide-react"
+import { CheckCircle2, CloudDownload, FilePlus2, PencilLine, Paperclip } from "lucide-react"
 import toast from "react-hot-toast"
 
 import { createTemplate, syncTemplates, updateTemplate } from "@/lib/api/templates"
@@ -22,6 +22,8 @@ const initialTemplate: WATemplateInput = {
   category: "MARKETING",
   language: "en_US",
   body_text: "Hello {{1}},\n\nWe have an update for you from Robotic Sir.",
+  header_type: "NONE",
+  header_sample: null,
   footer_text: "Reply STOP to opt out",
   variables: ["name"],
   variable_examples: ["Adarsh"],
@@ -60,6 +62,9 @@ export function TemplateManager({ templates, loading }: { templates: WATemplate[
   }
   const submit = (event: FormEvent) => {
     event.preventDefault()
+    if (form.header_type !== "NONE" && !form.header_sample) {
+      return toast.error("Select a sample media file for Meta review")
+    }
     createMutation.mutate(form)
   }
 
@@ -89,6 +94,43 @@ export function TemplateManager({ templates, loading }: { templates: WATemplate[
             </Field>
             <Field label="Language"><Input value={form.language} onChange={(event) => setForm({ ...form, language: event.target.value })} /></Field>
           </div>
+          <Field label="Media header">
+            <Select
+              value={form.header_type}
+              onValueChange={(value) =>
+                setForm({
+                  ...form,
+                  header_type: value as WATemplateInput["header_type"],
+                  header_sample: null,
+                })
+              }
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="NONE">Text only</SelectItem>
+                <SelectItem value="IMAGE">Image</SelectItem>
+                <SelectItem value="VIDEO">Video</SelectItem>
+                <SelectItem value="DOCUMENT">Document</SelectItem>
+              </SelectContent>
+            </Select>
+          </Field>
+          {form.header_type !== "NONE" && (
+            <Field label={`${titleCase(form.header_type)} sample for Meta review`}>
+              <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50/60 p-4 text-sm text-indigo-900">
+                <Paperclip className="h-5 w-5" />
+                <span className="min-w-0 truncate">{form.header_sample?.name || "Choose sample file"}</span>
+                <input
+                  key={form.header_type}
+                  type="file"
+                  className="sr-only"
+                  accept={mediaAccept(form.header_type)}
+                  onChange={(event) => setForm({ ...form, header_sample: event.target.files?.[0] ?? null })}
+                  required
+                />
+              </label>
+              <p className="text-xs text-slate-400">This sample is uploaded securely to Meta and is used only during template review.</p>
+            </Field>
+          )}
           <Field label="Message content">
             <Textarea value={form.body_text} onChange={(event) => changeBody(event.target.value)} className="min-h-36" maxLength={1024} />
             <p className="text-xs text-slate-400">Use sequential placeholders: {"{{1}}"}, {"{{2}}"}, etc.</p>
@@ -137,7 +179,7 @@ function TemplateCard({ template }: { template: WATemplate }) {
   return (
     <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div><h3 className="font-bold text-slate-900">{template.display_name}</h3><p className="mt-1 font-mono text-xs text-slate-400">{template.name} · {template.language}</p></div>
+        <div><h3 className="font-bold text-slate-900">{template.display_name}</h3><p className="mt-1 font-mono text-xs text-slate-400">{template.name} · {template.language} · {template.header_type === "NONE" ? "TEXT" : template.header_type}</p></div>
         <div className="flex items-center gap-2"><Badge variant="secondary">{template.category}</Badge><StatusBadge status={template.status} /></div>
       </div>
       <div className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{template.body_text}</div>
@@ -173,4 +215,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function normalizeName(value: string) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "") }
 function placeholderCount(value: string) { return Math.max(0, ...Array.from(value.matchAll(/{{\s*(\d+)\s*}}/g), (match) => Number(match[1]))) }
 function replaceAt(values: string[], index: number, value: string) { const next = [...values]; next[index] = value; return next }
+function titleCase(value: string) { return value.charAt(0) + value.slice(1).toLowerCase() }
+function mediaAccept(type: WATemplate["header_type"]) {
+  if (type === "IMAGE") return ".jpg,.jpeg,.png,image/jpeg,image/png"
+  if (type === "VIDEO") return ".mp4,.3gp,video/mp4,video/3gpp"
+  if (type === "DOCUMENT") return ".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+  return undefined
+}
 function apiError(error: unknown) { const candidate = error as { response?: { data?: { detail?: string | { message?: string } } } }; const detail = candidate.response?.data?.detail; return typeof detail === "string" ? detail : detail?.message || "WhatsApp template request failed" }

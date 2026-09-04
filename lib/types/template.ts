@@ -7,6 +7,7 @@ export interface WATemplate {
   language: string
   status: "LOCAL" | "PENDING" | "APPROVED" | "REJECTED" | "PAUSED" | "DISABLED"
   body_text: string
+  header_type: "NONE" | "IMAGE" | "VIDEO" | "DOCUMENT"
   footer_text: string
   variables: string[]
   variable_examples: string[]
@@ -22,6 +23,8 @@ export interface WATemplateInput {
   category: WATemplate["category"]
   language: string
   body_text: string
+  header_type: WATemplate["header_type"]
+  header_sample?: File | null
   footer_text: string
   variables: string[]
   variable_examples: string[]
@@ -33,6 +36,7 @@ export interface WhatsAppProviderReadiness {
   phone_number_id_configured?: boolean
   waba_id_configured?: boolean
   app_secret_configured?: boolean
+  app_id_configured?: boolean
   access_token_configured?: boolean
   graph_api_version?: string
   webhook_url?: string
@@ -59,4 +63,18 @@ export interface WhatsAppInboundMessage {
   message_type: string
   text: string
   received_at: string
+}
+
+export interface WebsiteLeadEvent {
+  id: number
+  event_id: string
+  event_type: string
+  lead: number | null
+  name: string
+  phone: string
+  email: string
+  payload: Record<string, unknown>
+  received_at: string
+  notification_status: "pending" | "queued" | "sent" | "delivered" | "read" | "failed"
+  notification_error: string
 }

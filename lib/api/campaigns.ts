@@ -7,7 +7,18 @@ export async function getCampaigns(): Promise<CampaignsResponse> {
 }
 
 export async function createCampaign(data: CampaignInput): Promise<Campaign> {
-  const response = await api.post<Campaign>("/campaigns/", data)
+  if (!data.media_file) {
+    const response = await api.post<Campaign>("/campaigns/", data)
+    return response.data
+  }
+  const body = new FormData()
+  body.append("name", data.name)
+  body.append("campaign_type", data.campaign_type)
+  body.append("template", String(data.template))
+  body.append("audience_filters", JSON.stringify(data.audience_filters))
+  if (data.scheduled_at) body.append("scheduled_at", data.scheduled_at)
+  body.append("media_file", data.media_file)
+  const response = await api.post<Campaign>("/campaigns/", body)
   return response.data
 }
 

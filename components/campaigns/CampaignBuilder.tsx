@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Send, Users } from "lucide-react"
+import { Paperclip, Send, Users } from "lucide-react"
 import toast from "react-hot-toast"
 
 import { createCampaign, previewAudience } from "@/lib/api/campaigns"
@@ -28,6 +28,7 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
     template: approvedTemplates[0]?.id ?? 0,
     audience_filters: {},
     scheduled_at: null,
+    media_file: null,
   })
   const [audienceCount, setAudienceCount] = useState<number | null>(null)
 
@@ -41,7 +42,7 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
     onSuccess: () => {
       toast.success("Campaign draft created")
       queryClient.invalidateQueries({ queryKey: ["campaigns"] })
-      setForm((current) => ({ ...current, name: "", scheduled_at: null }))
+      setForm((current) => ({ ...current, name: "", scheduled_at: null, media_file: null }))
       setAudienceCount(null)
     },
     onError: (error) => toast.error(apiError(error)),
@@ -61,8 +62,13 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
     if (!form.template) return toast.error("Create or sync an approved template first")
+    if (selectedTemplate?.header_type !== "NONE" && !form.media_file) {
+      return toast.error(`Attach a ${selectedTemplate?.header_type.toLowerCase()} for this template`)
+    }
     createMutation.mutate(form)
   }
+
+  const selectedTemplate = approvedTemplates.find((template) => template.id === form.template)
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1fr_340px]">
@@ -88,7 +94,7 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
           </Field>
           <div className="md:col-span-2">
             <Field label="Approved Meta template">
-              <Select value={form.template ? String(form.template) : undefined} onValueChange={(value) => setForm({ ...form, template: Number(value) })}>
+              <Select value={form.template ? String(form.template) : undefined} onValueChange={(value) => setForm({ ...form, template: Number(value), media_file: null })}>
                 <SelectTrigger><SelectValue placeholder="Select approved template" /></SelectTrigger>
                 <SelectContent>
                   {approvedTemplates.map((template) => (
@@ -98,6 +104,25 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
               </Select>
             </Field>
           </div>
+          {selectedTemplate && selectedTemplate.header_type !== "NONE" && (
+            <div className="md:col-span-2">
+              <Field label={`${titleCase(selectedTemplate.header_type)} attachment`}>
+                <label className="flex cursor-pointer items-center gap-3 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 p-4 text-sm text-emerald-950">
+                  <Paperclip className="h-5 w-5" />
+                  <span className="min-w-0 truncate">{form.media_file?.name || `Choose ${selectedTemplate.header_type.toLowerCase()}`}</span>
+                  <input
+                    key={`${selectedTemplate.id}-${form.media_file?.name || "empty"}`}
+                    type="file"
+                    className="sr-only"
+                    accept={mediaAccept(selectedTemplate.header_type)}
+                    onChange={(event) => setForm({ ...form, media_file: event.target.files?.[0] ?? null })}
+                    required
+                  />
+                </label>
+                <p className="text-xs text-slate-400">This private file is uploaded to Meta once when the campaign starts, then reused for every recipient.</p>
+              </Field>
+            </div>
+          )}
           <Field label="Lead status">
             <FilterSelect value={form.audience_filters.status || "all"} values={leadStatuses} onChange={(value) => setFilter("status", value)} />
           </Field>
@@ -162,4 +187,11 @@ function apiError(error: unknown) {
   const detail = candidate.response?.data?.detail
   if (typeof detail === "string") return detail
   return "Could not create the campaign"
+}
+
+function titleCase(value: string) { return value.charAt(0) + value.slice(1).toLowerCase() }
+function mediaAccept(type: WATemplate["header_type"]) {
+  if (type === "IMAGE") return ".jpg,.jpeg,.png,image/jpeg,image/png"
+  if (type === "VIDEO") return ".mp4,.3gp,video/mp4,video/3gpp"
+  return ".pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
 }

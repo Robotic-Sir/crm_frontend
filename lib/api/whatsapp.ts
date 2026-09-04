@@ -1,5 +1,5 @@
 import api from "@/lib/api/client"
-import { WhatsAppInboundMessage, WhatsAppIntegration } from "@/lib/types/template"
+import { WebsiteLeadEvent, WhatsAppInboundMessage, WhatsAppIntegration } from "@/lib/types/template"
 
 export async function getWhatsAppIntegration(): Promise<WhatsAppIntegration> {
   const response = await api.get("/whatsapp/config/")
@@ -20,5 +20,10 @@ export async function runWhatsAppConnection(operation: "test" | "subscribe") {
 
 export async function getInboundMessages(): Promise<WhatsAppInboundMessage[]> {
   const response = await api.get("/whatsapp/inbound/")
+  return response.data.results ?? response.data
+}
+
+export async function getWebsiteEvents(): Promise<WebsiteLeadEvent[]> {
+  const response = await api.get("/website-events/")
   return response.data.results ?? response.data
 }
