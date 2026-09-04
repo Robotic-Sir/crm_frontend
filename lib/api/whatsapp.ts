@@ -7,7 +7,7 @@ export async function getWhatsAppIntegration(): Promise<WhatsAppIntegration> {
 }
 
 export async function updateWhatsAppIntegration(
-  data: Pick<WhatsAppIntegration, "is_enabled" | "daily_limit" | "messages_per_second">
+  data: Pick<WhatsAppIntegration, "is_enabled" | "website_alerts_enabled" | "daily_limit" | "messages_per_second">
 ): Promise<WhatsAppIntegration> {
   const response = await api.patch("/whatsapp/config/", data)
   return response.data

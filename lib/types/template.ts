@@ -46,6 +46,7 @@ export interface WhatsAppProviderReadiness {
 
 export interface WhatsAppIntegration {
   is_enabled: boolean
+  website_alerts_enabled: boolean
   daily_limit: number
   messages_per_second: number
   updated_at: string

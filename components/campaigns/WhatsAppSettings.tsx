@@ -15,6 +15,7 @@ export function WhatsAppSettings({ integration }: { integration: WhatsAppIntegra
   const queryClient = useQueryClient()
   const [settings, setSettings] = useState({
     is_enabled: integration.is_enabled,
+    website_alerts_enabled: integration.website_alerts_enabled,
     daily_limit: integration.daily_limit,
     messages_per_second: integration.messages_per_second,
   })
@@ -50,6 +51,10 @@ export function WhatsAppSettings({ integration }: { integration: WhatsAppIntegra
           <label className="mt-6 flex items-center justify-between rounded-2xl border p-4">
             <span><span className="block font-semibold">Enable WhatsApp sending</span><span className="text-sm text-slate-500">Disable immediately to stop new campaign dispatches.</span></span>
             <input type="checkbox" checked={settings.is_enabled} onChange={(event) => setSettings({ ...settings, is_enabled: event.target.checked })} className="h-5 w-5 accent-emerald-600" />
+          </label>
+          <label className="mt-3 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+            <span><span className="block font-semibold text-emerald-950">Website enquiry alerts</span><span className="text-sm text-emerald-800">Send operational WhatsApp alerts for website enquiries, registrations, and confirmed payments.</span></span>
+            <input type="checkbox" checked={settings.website_alerts_enabled} onChange={(event) => setSettings({ ...settings, website_alerts_enabled: event.target.checked })} className="h-5 w-5 accent-emerald-600" />
           </label>
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             <div className="space-y-2"><Label>Daily safety limit</Label><Input type="number" min={1} max={1000} value={settings.daily_limit} onChange={(event) => setSettings({ ...settings, daily_limit: Number(event.target.value) })} /><p className="text-xs text-slate-400">Maximum 1,000</p></div>
