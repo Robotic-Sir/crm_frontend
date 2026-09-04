@@ -5,8 +5,12 @@ import QueryProvider from "@/providers/QueryProvider"
 import ToasterProvider from "@/providers/ToasterProvider"
 
 export const metadata: Metadata = {
-  title: "CRM Frontend",
-  description: "RoboticSir CRM",
+  title: "Robotic Sir CRM",
+  description: "Robotic Sir customer relationship management workspace",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: "/icon.svg",
+  },
 }
 
 export default function RootLayout({
