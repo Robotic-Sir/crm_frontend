@@ -70,11 +70,16 @@ export interface WebsiteLeadEvent {
   id: number
   event_id: string
   event_type: string
+  event_type_display: string
   lead: number | null
   name: string
   phone: string
   email: string
   payload: Record<string, unknown>
+  required_action: string
+  action_status: "pending" | "in_progress" | "completed" | "dismissed"
+  actioned_by: number | null
+  actioned_at: string | null
   received_at: string
   notification_status: "pending" | "queued" | "sent" | "delivered" | "read" | "failed"
   notification_error: string

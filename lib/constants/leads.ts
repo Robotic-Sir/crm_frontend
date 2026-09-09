@@ -1,9 +1,22 @@
 export const LEAD_SOURCES = [
-  { label: "Manual", value: "manual" },
+  { label: "Manual add", value: "manual" },
   { label: "Website", value: "website" },
+  { label: "Bulk Excel", value: "import" },
   { label: "Referral", value: "referral" },
   { label: "Other", value: "other" },
 ]
+
+export const SOURCE_COLORS: Record<string, string> = {
+  manual: "bg-indigo-50 text-indigo-700 ring-indigo-200",
+  website: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  import: "bg-amber-50 text-amber-700 ring-amber-200",
+  referral: "bg-violet-50 text-violet-700 ring-violet-200",
+  other: "bg-slate-50 text-slate-700 ring-slate-200",
+}
+
+export function getSourceLabel(value: string): string {
+  return LEAD_SOURCES.find((source) => source.value === value)?.label ?? value
+}
 
 export const LEAD_STATUSES = [
   { label: "New", value: "new" },

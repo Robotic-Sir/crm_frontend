@@ -23,10 +23,14 @@ export function WebsiteEvents({ events }: { events: WebsiteLeadEvent[] }) {
               <p className="mt-1 break-all text-xs text-slate-500">{event.phone || "No phone"}{event.email ? ` · ${event.email}` : ""}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Badge variant="secondary">{event.event_type.replaceAll("_", " ")}</Badge>
+              <Badge variant="secondary">{event.event_type_display || event.event_type.replaceAll("_", " ")}</Badge>
+              <Badge className={actionClass(event.action_status)}>Action: {event.action_status.replaceAll("_", " ")}</Badge>
               <Badge className={statusClass(event.notification_status)}>Alert: {event.notification_status}</Badge>
             </div>
           </div>
+          <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm font-medium text-amber-900">
+            Required action: {event.required_action}
+          </p>
           <div className="mt-4 grid gap-2 text-xs text-slate-500 sm:grid-cols-2">
             <span>Event ID: <span className="font-mono">{event.event_id}</span></span>
             <time className="sm:text-right">{new Date(event.received_at).toLocaleString("en-IN")}</time>
@@ -119,5 +123,12 @@ function validRoboticSirUrl(value: unknown) {
 function statusClass(status: WebsiteLeadEvent["notification_status"]) {
   if (["sent", "delivered", "read"].includes(status)) return "bg-emerald-100 text-emerald-700"
   if (status === "failed") return "bg-red-100 text-red-700"
+  return "bg-amber-100 text-amber-700"
+}
+
+function actionClass(status: WebsiteLeadEvent["action_status"]) {
+  if (status === "completed") return "bg-emerald-100 text-emerald-700"
+  if (status === "dismissed") return "bg-slate-100 text-slate-600"
+  if (status === "in_progress") return "bg-blue-100 text-blue-700"
   return "bg-amber-100 text-amber-700"
 }

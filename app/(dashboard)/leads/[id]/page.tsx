@@ -1,7 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { useParams, useRouter } from "next/navigation"
+import { useParams, useRouter, useSearchParams } from "next/navigation"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import toast from "react-hot-toast"
 import {
   ArrowLeft,
   Save,
@@ -12,6 +14,9 @@ import {
   StickyNote,
   Bell,
   Activity as ActivityIcon,
+  CircleAlert,
+  ExternalLink,
+  Globe2,
 } from "lucide-react"
 
 import { Card } from "@/components/ui/card"
@@ -40,15 +45,23 @@ import {
 
 import {
   LEAD_STATUSES,
-  LEAD_SOURCES,
+  SOURCE_COLORS,
   STATUS_COLORS,
+  getSourceLabel,
   getStatusLabel,
 } from "@/lib/constants/leads"
+import { updateWebsiteActivityAction } from "@/lib/api/leads"
+import { WebsiteActivity } from "@/lib/types/lead"
+import { useAuthStore } from "@/lib/store/auth"
 
 export default function LeadDetailPage() {
   const params = useParams()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const queryClient = useQueryClient()
   const leadId = Number(params.id)
+  const user = useAuthStore((state) => state.user)
+  const isAdmin = user?.role === "admin" || user?.role === "superadmin"
 
   const { data: lead, isLoading } = useLeadDetail(leadId)
   const updateLead = useUpdateLead(leadId)
@@ -56,10 +69,21 @@ export default function LeadDetailPage() {
   const deleteNoteMutation = useDeleteNote(leadId)
   const addReminder = useAddReminder(leadId)
   const updateReminderMutation = useUpdateReminder(leadId)
+  const updateWebsiteAction = useMutation({
+    mutationFn: ({ eventId, actionStatus }: { eventId: number; actionStatus: WebsiteActivity["action_status"] }) =>
+      updateWebsiteActivityAction(eventId, actionStatus),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lead", leadId] })
+      queryClient.invalidateQueries({ queryKey: ["leads"] })
+      queryClient.invalidateQueries({ queryKey: ["website-events"] })
+      toast.success("Website action updated")
+    },
+    onError: () => toast.error("Could not update the website action"),
+  })
 
   const [activeTab, setActiveTab] = useState<
-    "details" | "notes" | "reminders" | "activity"
-  >("details")
+    "details" | "website" | "notes" | "reminders" | "activity"
+  >(searchParams.get("tab") === "website" ? "website" : "details")
 
   const [editForm, setEditForm] = useState<Record<string, string>>({})
   const [noteText, setNoteText] = useState("")
@@ -95,12 +119,11 @@ export default function LeadDetailPage() {
   function startEditing() {
     setEditForm({
       name: lead!.name,
-      phone: lead!.phone,
+      phone: lead!.phone || "",
       email: lead!.email || "",
       course: lead!.course || "",
       city: lead!.city || "",
       status: lead!.status,
-      source: lead!.source,
       notes: lead!.notes || "",
     })
     setIsEditing(true)
@@ -141,6 +164,7 @@ export default function LeadDetailPage() {
 
   const tabs = [
     { key: "details" as const, label: "Details", icon: Save },
+    { key: "website" as const, label: `Website (${lead.website_events?.length ?? 0})`, icon: Globe2 },
     { key: "notes" as const, label: `Notes (${lead.lead_notes?.length ?? 0})`, icon: StickyNote },
     { key: "reminders" as const, label: `Reminders (${lead.reminders?.length ?? 0})`, icon: Bell },
     { key: "activity" as const, label: "Activity", icon: ActivityIcon },
@@ -156,7 +180,12 @@ export default function LeadDetailPage() {
           </Button>
           <div>
             <h1 className="text-2xl font-bold">{lead.name}</h1>
-            <p className="text-sm text-slate-500">{lead.phone} &middot; {lead.email || "No email"}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <p className="text-sm text-slate-500">{lead.phone || "No phone"} &middot; {lead.email || "No email"}</p>
+              <Badge variant="secondary" className={`ring-1 ${SOURCE_COLORS[lead.source] || SOURCE_COLORS.other}`}>
+                {getSourceLabel(lead.source)}
+              </Badge>
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -258,24 +287,6 @@ export default function LeadDetailPage() {
                   onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
                 />
               </div>
-              <div>
-                <Label>Source</Label>
-                <Select
-                  value={editForm.source}
-                  onValueChange={(v) => setEditForm({ ...editForm, source: v })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {LEAD_SOURCES.map((s) => (
-                      <SelectItem key={s.value} value={s.value}>
-                        {s.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="sm:col-span-2">
                 <Label>Remark</Label>
                 <Textarea
@@ -288,11 +299,11 @@ export default function LeadDetailPage() {
           ) : (
             <div className="grid gap-4 sm:grid-cols-2">
               <InfoRow label="Name" value={lead.name} />
-              <InfoRow label="Phone" value={lead.phone} />
+              <InfoRow label="Phone" value={lead.phone || "-"} />
               <InfoRow label="Email" value={lead.email || "-"} />
               <InfoRow label="Course" value={lead.course || "-"} />
               <InfoRow label="City" value={lead.city || "-"} />
-              <InfoRow label="Source" value={lead.source} />
+              <InfoRow label="Source" value={getSourceLabel(lead.source)} />
               <InfoRow label="Assigned To" value={lead.assigned_to_name || "Unassigned"} />
               <InfoRow
                 label="Status"
@@ -327,6 +338,36 @@ export default function LeadDetailPage() {
                   <InfoRow key={cv.id} label={cv.field_label} value={cv.value || "-"} />
                 ))}
               </div>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {activeTab === "website" && (
+        <Card className="rounded-2xl p-6">
+          <div className="mb-5">
+            <h2 className="text-lg font-semibold">Website activity and required actions</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Enquiries, registrations, payments and store activity received from roboticsir.com.
+            </p>
+          </div>
+          {lead.website_events?.length === 0 ? (
+            <p className="rounded-xl border border-dashed py-10 text-center text-sm text-slate-400">
+              No website activity is linked to this lead.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {lead.website_events.map((event) => (
+                <WebsiteActivityCard
+                  key={event.id}
+                  event={event}
+                  canUpdate={isAdmin}
+                  isUpdating={updateWebsiteAction.isPending}
+                  onUpdate={(actionStatus) =>
+                    updateWebsiteAction.mutate({ eventId: event.id, actionStatus })
+                  }
+                />
+              ))}
             </div>
           )}
         </Card>
@@ -501,4 +542,139 @@ function InfoRow({
       <div className="mt-1 text-sm">{value}</div>
     </div>
   )
+}
+
+const WEBSITE_ACTION_OPTIONS: Array<{
+  value: WebsiteActivity["action_status"]
+  label: string
+}> = [
+  { value: "pending", label: "Pending" },
+  { value: "in_progress", label: "In progress" },
+  { value: "completed", label: "Completed" },
+  { value: "dismissed", label: "Dismissed" },
+]
+
+function WebsiteActivityCard({
+  event,
+  canUpdate,
+  isUpdating,
+  onUpdate,
+}: {
+  event: WebsiteActivity
+  canUpdate: boolean
+  isUpdating: boolean
+  onUpdate: (status: WebsiteActivity["action_status"]) => void
+}) {
+  const sourceUrl = validRoboticSirUrl(event.payload.source_url)
+  const details = safeWebsiteFields(event.payload)
+  const openAction = ["pending", "in_progress"].includes(event.action_status)
+
+  return (
+    <article className={`overflow-hidden rounded-2xl border ${openAction ? "border-amber-200" : "border-slate-200"}`}>
+      <div className="p-4 sm:p-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">{event.event_type_display}</Badge>
+              <Badge className={websiteActionClass(event.action_status)}>
+                {WEBSITE_ACTION_OPTIONS.find((option) => option.value === event.action_status)?.label}
+              </Badge>
+            </div>
+            <p className="mt-3 flex items-start gap-2 font-medium text-slate-800">
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              {event.required_action}
+            </p>
+            <p className="mt-2 text-xs text-slate-400">
+              Received {new Date(event.received_at).toLocaleString("en-IN")} · Event {event.event_id}
+            </p>
+          </div>
+          {canUpdate && (
+            <Select
+              value={event.action_status}
+              disabled={isUpdating}
+              onValueChange={(value) => onUpdate(value as WebsiteActivity["action_status"])}
+            >
+              <SelectTrigger className="w-full bg-white lg:w-44"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {WEBSITE_ACTION_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+        {sourceUrl && (
+          <Button asChild variant="outline" size="sm" className="mt-4">
+            <a href={sourceUrl} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4" /> Open source page
+            </a>
+          </Button>
+        )}
+      </div>
+      <details className="group border-t bg-slate-50/70">
+        <summary className="cursor-pointer list-none px-4 py-3 text-sm font-semibold text-slate-700 marker:hidden sm:px-5">
+          <span className="inline-flex items-center gap-2">
+            <span className="text-slate-400 transition group-open:rotate-90">›</span>
+            View all captured details ({details.length})
+          </span>
+        </summary>
+        <div className="grid gap-x-8 gap-y-3 border-t px-4 py-4 sm:grid-cols-2 sm:px-5 lg:grid-cols-3">
+          {details.map(([label, value]) => (
+            <div key={label} className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-slate-400">{label}</p>
+              <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">{value}</p>
+            </div>
+          ))}
+          {details.length === 0 && <p className="text-sm text-slate-500">No additional details were supplied.</p>}
+        </div>
+      </details>
+    </article>
+  )
+}
+
+const forbiddenWebsiteFields = ["password", "secret", "token", "otp", "cvv", "cvc", "cardnumber"]
+
+function safeWebsiteFields(payload: Record<string, unknown>): Array<[string, string]> {
+  const output: Array<[string, string]> = []
+  const add = (path: string[], value: unknown) => {
+    if (path.some((part) => forbiddenWebsiteFields.some((marker) => part.toLowerCase().replace(/[^a-z0-9]/g, "").includes(marker)))) return
+    if (Array.isArray(value)) {
+      const display = value.filter((item) => ["string", "number", "boolean"].includes(typeof item)).map(String).join(", ")
+      if (display) output.push([websiteFieldLabel(path), display.slice(0, 2000)])
+      return
+    }
+    if (value && typeof value === "object") {
+      Object.entries(value as Record<string, unknown>).forEach(([key, item]) => add([...path, key], item))
+      return
+    }
+    if (value !== null && value !== undefined && String(value).trim()) {
+      output.push([websiteFieldLabel(path), String(value).slice(0, 2000)])
+    }
+  }
+  for (const key of ["source", "reference_id", "occurred_at", "contact", "details"] as const) {
+    if (key in payload) add([key], payload[key])
+  }
+  return output
+}
+
+function websiteFieldLabel(path: string[]) {
+  return path.map((part) => part.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase())).join(" · ")
+}
+
+function validRoboticSirUrl(value: unknown) {
+  if (typeof value !== "string") return null
+  try {
+    const url = new URL(value)
+    const host = url.hostname.toLowerCase()
+    return url.protocol === "https:" && (host === "roboticsir.com" || host.endsWith(".roboticsir.com")) ? url.toString() : null
+  } catch {
+    return null
+  }
+}
+
+function websiteActionClass(status: WebsiteActivity["action_status"]) {
+  if (status === "completed") return "bg-emerald-100 text-emerald-700"
+  if (status === "dismissed") return "bg-slate-100 text-slate-600"
+  if (status === "in_progress") return "bg-blue-100 text-blue-700"
+  return "bg-amber-100 text-amber-700"
 }

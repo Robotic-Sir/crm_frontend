@@ -20,7 +20,7 @@ import {
   useLeads,
   useReminderSummary,
 } from "@/hooks/use-leads"
-import { CONTACT_STATUSES, LEAD_STATUSES } from "@/lib/constants/leads"
+import { CONTACT_STATUSES, LEAD_SOURCES, LEAD_STATUSES } from "@/lib/constants/leads"
 import { LeadFilters } from "@/lib/types/lead"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -38,6 +38,7 @@ const EMPTY_FILTERS: LeadFilters = {
   city: "",
   course: "",
   contact_status: "",
+  source: "",
 }
 
 export default function LeadsPage() {
@@ -123,13 +124,14 @@ export default function LeadsPage() {
           </div>
         </div>
 
-        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 xl:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-5 xl:grid-cols-6">
+          <FilterSelect label="Source" value={filters.source || "all"} onChange={(value) => setFilter("source", value)} options={LEAD_SOURCES} />
           <FilterSelect label="Lead status" value={filters.status || "all"} onChange={(value) => setFilter("status", value)} options={LEAD_STATUSES} />
           <FilterSelect label="Contacted" value={filters.contact_status || "all"} onChange={(value) => setFilter("contact_status", value)} options={CONTACT_STATUSES} />
           <FilterSelect label="Location" value={filters.city || "all"} onChange={(value) => setFilter("city", value)} options={(filterOptions?.cities || []).map((value) => ({ label: value, value }))} />
           <FilterSelect label="Course" value={filters.course || "all"} onChange={(value) => setFilter("course", value)} options={(filterOptions?.courses || []).map((value) => ({ label: value, value }))} />
           {(filterCount > 0 || searchInput) && (
-            <Button variant="ghost" onClick={clearFilters} className="col-span-2 h-10 justify-center text-slate-500 sm:col-span-4 xl:col-span-1">
+            <Button variant="ghost" onClick={clearFilters} className="col-span-2 h-10 justify-center text-slate-500 sm:col-span-5 xl:col-span-1">
               <X className="mr-2 h-4 w-4" />Clear view
             </Button>
           )}

@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 import {
   CalendarDays,
+  CircleAlert,
   GraduationCap,
   Inbox,
   MapPin,
@@ -17,10 +18,16 @@ import {
 
 import { Lead } from "@/lib/types/lead"
 import { User } from "@/lib/types/user"
-import { CONTACT_STATUSES, LEAD_STATUSES } from "@/lib/constants/leads"
+import {
+  CONTACT_STATUSES,
+  LEAD_STATUSES,
+  SOURCE_COLORS,
+  getSourceLabel,
+} from "@/lib/constants/leads"
 import { getCounsellors, updateLead } from "@/lib/api/leads"
 import { useAuthStore } from "@/lib/store/auth"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Dialog,
   DialogContent,
@@ -99,6 +106,7 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
             <TableHeader className="bg-slate-50/90">
               <TableRow>
                 <TableHead className="min-w-56">Lead</TableHead>
+                <TableHead className="min-w-56">Origin & website action</TableHead>
                 <TableHead className="min-w-44">Course & location</TableHead>
                 <TableHead className="min-w-64">Remark</TableHead>
                 <TableHead className="min-w-44">Contacted</TableHead>
@@ -114,6 +122,9 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
                 <TableRow key={lead.id} className="group hover:bg-indigo-50/30">
                   <TableCell>
                     <LeadIdentity lead={lead} />
+                  </TableCell>
+                  <TableCell>
+                    <SourceSummary lead={lead} />
                   </TableCell>
                   <TableCell>
                     <CourseLocation lead={lead} />
@@ -170,6 +181,9 @@ export default function LeadsTable({ leads }: LeadsTableProps) {
               </div>
             </div>
             <div className="border-b border-slate-100 py-3">
+              <SourceSummary lead={lead} />
+            </div>
+            <div className="border-b border-slate-100 py-3">
               <p className="mb-1 text-xs font-medium text-slate-500">Remark</p>
               <RemarkEditor
                 lead={lead}
@@ -211,9 +225,37 @@ function LeadIdentity({ lead }: { lead: Lead }) {
       <Link href={`/leads/${lead.id}`} className="font-semibold text-slate-900 hover:text-indigo-700 hover:underline">
         {lead.name}
       </Link>
-      <a href={`tel:${lead.phone}`} className="mt-1 flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-700">
-        <Phone className="h-3.5 w-3.5" /> {lead.phone}
-      </a>
+      {lead.phone ? (
+        <a href={`tel:${lead.phone}`} className="mt-1 flex items-center gap-1.5 text-sm text-slate-500 hover:text-indigo-700">
+          <Phone className="h-3.5 w-3.5" /> {lead.phone}
+        </a>
+      ) : (
+        <p className="mt-1 text-sm text-slate-400">No phone provided</p>
+      )}
+    </div>
+  )
+}
+
+function SourceSummary({ lead }: { lead: Lead }) {
+  return (
+    <div className="space-y-2">
+      <Badge variant="secondary" className={`ring-1 ${SOURCE_COLORS[lead.source] || SOURCE_COLORS.other}`}>
+        {getSourceLabel(lead.source)}
+      </Badge>
+      {lead.website_event_count > 0 && (
+        <p className="text-xs text-slate-500">
+          {lead.website_event_count} website {lead.website_event_count === 1 ? "activity" : "activities"}
+        </p>
+      )}
+      {lead.pending_website_actions > 0 && (
+        <Link
+          href={`/leads/${lead.id}?tab=website`}
+          className="flex items-start gap-1.5 rounded-lg bg-amber-50 p-2 text-xs font-medium leading-4 text-amber-800 hover:bg-amber-100"
+        >
+          <CircleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+          <span>{lead.website_required_action || `${lead.pending_website_actions} website actions pending`}</span>
+        </Link>
+      )}
     </div>
   )
 }
@@ -362,15 +404,19 @@ function AssigneeSelect({ lead, counsellors, onUpdate }: { lead: Lead; counsello
 }
 
 function QuickActions({ lead, compact = false }: { lead: Lead; compact?: boolean }) {
-  const whatsappPhone = lead.phone.replace(/\D/g, "")
+  const whatsappPhone = lead.phone?.replace(/\D/g, "") || ""
   return (
     <div className={`flex justify-end ${compact ? "gap-1" : "gap-2"}`}>
-      <Button asChild variant="outline" size="icon-sm" className="rounded-full border-emerald-200 text-emerald-700 hover:bg-emerald-50">
-        <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}><Phone className="h-4 w-4" /></a>
-      </Button>
-      <Button asChild variant="outline" size="icon-sm" className="rounded-full border-green-200 text-green-700 hover:bg-green-50">
-        <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer" aria-label={`WhatsApp ${lead.name}`}><MessageCircle className="h-4 w-4" /></a>
-      </Button>
+      {lead.phone && (
+        <>
+          <Button asChild variant="outline" size="icon-sm" className="rounded-full border-emerald-200 text-emerald-700 hover:bg-emerald-50">
+            <a href={`tel:${lead.phone}`} aria-label={`Call ${lead.name}`}><Phone className="h-4 w-4" /></a>
+          </Button>
+          <Button asChild variant="outline" size="icon-sm" className="rounded-full border-green-200 text-green-700 hover:bg-green-50">
+            <a href={`https://wa.me/${whatsappPhone}`} target="_blank" rel="noreferrer" aria-label={`WhatsApp ${lead.name}`}><MessageCircle className="h-4 w-4" /></a>
+          </Button>
+        </>
+      )}
       {!compact && (
         <Button asChild variant="ghost" size="icon-sm" className="rounded-full text-slate-500">
           <Link href={`/leads/${lead.id}`} aria-label={`Open ${lead.name}`}><CalendarDays className="h-4 w-4" /></Link>

@@ -14,6 +14,7 @@ import {
   LeadFilters,
   LeadFilterOptions,
   ReminderSummary,
+  WebsiteActivity,
 } from "@/lib/types/lead"
 import { User } from "@/lib/types/user"
 
@@ -58,6 +59,16 @@ export async function getLeadFilterOptions(): Promise<LeadFilterOptions> {
 
 export async function getReminderSummary(): Promise<ReminderSummary> {
   const response = await apiClient.get("/leads/reminder-summary/")
+  return response.data
+}
+
+export async function updateWebsiteActivityAction(
+  eventId: number,
+  actionStatus: WebsiteActivity["action_status"]
+): Promise<WebsiteActivity> {
+  const response = await apiClient.patch(`/website-events/${eventId}/action/`, {
+    action_status: actionStatus,
+  })
   return response.data
 }
 

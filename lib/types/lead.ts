@@ -1,7 +1,7 @@
 export interface Lead {
   id: number
   name: string
-  phone: string
+  phone: string | null
   email: string
   course: string
   city: string
@@ -19,6 +19,11 @@ export interface Lead {
   created_by: number | null
   created_at: string
   updated_at: string
+  website_event_count: number
+  pending_website_actions: number
+  latest_website_activity_at: string | null
+  latest_website_event_type: string | null
+  website_required_action: string | null
 }
 
 export interface LeadFilters {
@@ -26,6 +31,7 @@ export interface LeadFilters {
   city?: string
   course?: string
   contact_status?: string
+  source?: string
 }
 
 export interface LeadFilterOptions {
@@ -120,6 +126,23 @@ export interface LeadDetail extends Lead {
   reminders: Reminder[]
   activities: Activity[]
   custom_values: CustomFieldValue[]
+  website_events: WebsiteActivity[]
+}
+
+export interface WebsiteActivity {
+  id: number
+  event_id: string
+  event_type: string
+  event_type_display: string
+  name: string
+  phone: string
+  email: string
+  payload: Record<string, unknown>
+  required_action: string
+  action_status: "pending" | "in_progress" | "completed" | "dismissed"
+  actioned_by: number | null
+  actioned_at: string | null
+  received_at: string
 }
 
 export interface MessageLog {

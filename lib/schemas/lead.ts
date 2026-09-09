@@ -27,12 +27,7 @@ export const createLeadSchema =
       .string()
       .optional(),
 
-    source: z.enum([
-     "manual",
-      "website",
-      "referral",
-      "other",
-    ]),
+    source: z.literal("manual"),
 
     notes: z
       .string()

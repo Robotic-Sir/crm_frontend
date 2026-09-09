@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Controller, useForm } from "react-hook-form"
+import { useForm } from "react-hook-form"
 import { useQuery } from "@tanstack/react-query"
 import { zodResolver } from "@hookform/resolvers/zod"
 import toast from "react-hot-toast"
@@ -10,7 +10,6 @@ import { GraduationCap, Loader2, Sparkles, UserRound } from "lucide-react"
 import { createLeadSchema, CreateLeadInput } from "@/lib/schemas/lead"
 import { useCreateLead } from "@/hooks/use-create-lead"
 import { getActiveCustomFields, getCounsellors } from "@/lib/api/leads"
-import { LEAD_SOURCES } from "@/lib/constants/leads"
 import { useAuthStore } from "@/lib/store/auth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -46,7 +45,6 @@ export function CreateLeadForm() {
 
   const {
     register,
-    control,
     handleSubmit,
     formState: { errors },
   } = useForm<CreateLeadInput>({
@@ -131,24 +129,9 @@ export function CreateLeadForm() {
           <Input {...register("course")} placeholder="AI Mastery" />
         </Field>
         <Field label="Lead source">
-          <Controller
-            control={control}
-            name="source"
-            render={({ field }) => (
-              <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="h-10 w-full bg-white">
-                  <SelectValue placeholder="Select source" />
-                </SelectTrigger>
-                <SelectContent>
-                  {LEAD_SOURCES.map((source) => (
-                    <SelectItem key={source.value} value={source.value}>
-                      {source.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-          />
+          <div className="flex h-10 items-center rounded-md border bg-white px-3 text-sm font-medium text-indigo-700">
+            Manual add
+          </div>
         </Field>
         {isAdmin && (
           <Field label="Assign counsellor">
