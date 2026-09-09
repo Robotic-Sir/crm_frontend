@@ -35,10 +35,9 @@ export function UploadDropzone() {
             CSV, XLSX, XLS supported
           </p>
           <p className="mt-2 max-w-lg text-xs leading-5 text-slate-400">
-            Include a <span className="font-medium text-slate-600">Remark</span>,{" "}
-            <span className="font-medium text-slate-600">Remarks</span>, or{" "}
-            <span className="font-medium text-slate-600">Notes</span> column to import lead remarks.
-            Re-importing the same phone number updates its remark.
+            Remark columns are detected automatically from headings such as remarks,
+            notes, feedback, disposition, call outcome, and similar descriptive names.
+            Re-importing the same phone number updates its remark when the uploaded value is not empty.
           </p>
         </div>
 
