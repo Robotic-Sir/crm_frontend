@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { Paperclip, Send, Users } from "lucide-react"
 import toast from "react-hot-toast"
@@ -8,19 +8,23 @@ import toast from "react-hot-toast"
 import { createCampaign, previewAudience } from "@/lib/api/campaigns"
 import { CampaignInput } from "@/lib/types/campaigns"
 import { WATemplate } from "@/lib/types/template"
+import { LEAD_STATUSES } from "@/lib/constants/leads"
 import { useLeadFilterOptions } from "@/hooks/use-leads"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-const leadStatuses = ["new", "contacted", "interested", "qualified", "converted", "lost"]
+const leadStatuses = LEAD_STATUSES.map((status) => status.value)
 
 export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
   const queryClient = useQueryClient()
   const { data: filterOptions } = useLeadFilterOptions()
-  const approvedTemplates = templates.filter(
-    (template) => template.status === "APPROVED" && template.is_active
+  const approvedTemplates = useMemo(
+    () => templates.filter(
+      (template) => template.status === "APPROVED" && template.is_active
+    ),
+    [templates]
   )
   const [form, setForm] = useState<CampaignInput>({
     name: "",
@@ -31,11 +35,14 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
     media_file: null,
   })
   const [audienceCount, setAudienceCount] = useState<number | null>(null)
+  const selectedTemplate = approvedTemplates.find(
+    (template) => template.id === form.template
+  ) ?? approvedTemplates[0]
 
   const previewMutation = useMutation({
     mutationFn: () => previewAudience(form.audience_filters),
     onSuccess: setAudienceCount,
-    onError: () => toast.error("Could not calculate the audience"),
+    onError: (error) => toast.error(apiError(error, "Could not calculate the audience")),
   })
   const createMutation = useMutation({
     mutationFn: createCampaign,
@@ -61,14 +68,15 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault()
-    if (!form.template) return toast.error("Create or sync an approved template first")
+    if (!selectedTemplate) return toast.error("Create or sync an approved template first")
+    if (!isTemplateMapped(selectedTemplate)) {
+      return toast.error("Map every template variable to a lead field in the Templates tab first")
+    }
     if (selectedTemplate?.header_type !== "NONE" && !form.media_file) {
       return toast.error(`Attach a ${selectedTemplate?.header_type.toLowerCase()} for this template`)
     }
-    createMutation.mutate(form)
+    createMutation.mutate({ ...form, template: selectedTemplate.id })
   }
-
-  const selectedTemplate = approvedTemplates.find((template) => template.id === form.template)
 
   return (
     <form onSubmit={handleSubmit} className="grid gap-6 xl:grid-cols-[1fr_340px]">
@@ -94,15 +102,22 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
           </Field>
           <div className="md:col-span-2">
             <Field label="Approved Meta template">
-              <Select value={form.template ? String(form.template) : undefined} onValueChange={(value) => setForm({ ...form, template: Number(value), media_file: null })}>
+              <Select value={selectedTemplate ? String(selectedTemplate.id) : undefined} onValueChange={(value) => setForm({ ...form, template: Number(value), media_file: null })}>
                 <SelectTrigger><SelectValue placeholder="Select approved template" /></SelectTrigger>
                 <SelectContent>
                   {approvedTemplates.map((template) => (
-                    <SelectItem key={template.id} value={String(template.id)}>{template.display_name} · {template.language}</SelectItem>
+                    <SelectItem key={template.id} value={String(template.id)}>
+                      {template.display_name} · {template.language}{isTemplateMapped(template) ? "" : " · mapping required"}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </Field>
+            {selectedTemplate && !isTemplateMapped(selectedTemplate) && (
+              <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-800">
+                This template is approved by Meta, but its variables are not mapped yet. Open the Templates tab, choose Variable mapping, and save one lead field for each placeholder.
+              </p>
+            )}
           </div>
           {selectedTemplate && selectedTemplate.header_type !== "NONE" && (
             <div className="md:col-span-2">
@@ -123,14 +138,14 @@ export function CampaignBuilder({ templates }: { templates: WATemplate[] }) {
               </Field>
             </div>
           )}
-          <Field label="Lead status">
-            <FilterSelect value={form.audience_filters.status || "all"} values={leadStatuses} onChange={(value) => setFilter("status", value)} />
+          <Field label="Leads">
+            <FilterSelect allLabel="All eligible leads" value={form.audience_filters.status || "all"} values={leadStatuses} onChange={(value) => setFilter("status", value)} />
           </Field>
           <Field label="Location">
-            <FilterSelect value={form.audience_filters.city || "all"} values={filterOptions?.cities ?? []} onChange={(value) => setFilter("city", value)} />
+            <FilterSelect allLabel="All locations" value={form.audience_filters.city || "all"} values={filterOptions?.cities ?? []} onChange={(value) => setFilter("city", value)} />
           </Field>
           <Field label="Course">
-            <FilterSelect value={form.audience_filters.course || "all"} values={filterOptions?.courses ?? []} onChange={(value) => setFilter("course", value)} />
+            <FilterSelect allLabel="All courses" value={form.audience_filters.course || "all"} values={filterOptions?.courses ?? []} onChange={(value) => setFilter("course", value)} />
           </Field>
           <Field label="Schedule (optional)">
             <Input type="datetime-local" value={form.scheduled_at ? toLocalInput(form.scheduled_at) : ""} onChange={(event) => setForm({ ...form, scheduled_at: event.target.value ? new Date(event.target.value).toISOString() : null })} />
@@ -164,13 +179,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   return <div className="space-y-2"><Label>{label}</Label>{children}</div>
 }
 
-function FilterSelect({ value, values, onChange }: { value: string; values: string[]; onChange: (value: string) => void }) {
+function FilterSelect({ allLabel, value, values, onChange }: { allLabel: string; value: string; values: string[]; onChange: (value: string) => void }) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger><SelectValue /></SelectTrigger>
       <SelectContent>
-        <SelectItem value="all">All opted-in leads</SelectItem>
-        {values.map((item) => <SelectItem key={item} value={item}>{item}</SelectItem>)}
+        <SelectItem value="all">{allLabel}</SelectItem>
+        {values.map((item) => <SelectItem key={item} value={item}>{titleCase(item.replaceAll("_", " "))}</SelectItem>)}
       </SelectContent>
     </Select>
   )
@@ -182,14 +197,33 @@ function toLocalInput(value: string) {
   return new Date(date.getTime() - offset * 60_000).toISOString().slice(0, 16)
 }
 
-function apiError(error: unknown) {
-  const candidate = error as { response?: { data?: { detail?: string | Record<string, string[]> } } }
-  const detail = candidate.response?.data?.detail
-  if (typeof detail === "string") return detail
-  return "Could not create the campaign"
+function apiError(error: unknown, fallback = "Could not create the campaign") {
+  const candidate = error as { response?: { data?: unknown } }
+  return firstError(candidate.response?.data) || fallback
+}
+
+function firstError(value: unknown): string | null {
+  if (typeof value === "string") return value
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const message = firstError(item)
+      if (message) return message
+    }
+  }
+  if (value && typeof value === "object") {
+    for (const item of Object.values(value as Record<string, unknown>)) {
+      const message = firstError(item)
+      if (message) return message
+    }
+  }
+  return null
 }
 
 function titleCase(value: string) { return value.charAt(0) + value.slice(1).toLowerCase() }
+function isTemplateMapped(template: WATemplate) {
+  const count = Math.max(0, ...Array.from(template.body_text.matchAll(/{{\s*(\d+)\s*}}/g), (match) => Number(match[1])))
+  return template.variables.length === count && template.variables.every(Boolean)
+}
 function mediaAccept(type: WATemplate["header_type"]) {
   if (type === "IMAGE") return ".jpg,.jpeg,.png,image/jpeg,image/png"
   if (type === "VIDEO") return ".mp4,.3gp,video/mp4,video/3gpp"
